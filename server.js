@@ -45,6 +45,7 @@ const upload = multer({ dest: 'uploads/' });
  *                   type: string
  */
 app.post('/api/stt', upload.single('file'), async (req, res) => {
+
   const job = await myQueue.add('stt', { filePath: req.file.path });
   res.json({ taskId: job.id });
 });
@@ -71,6 +72,7 @@ app.post('/api/stt', upload.single('file'), async (req, res) => {
  *         description: Trả về taskId
  */
 app.post('/api/ocr', upload.single('file'), async (req, res) => {
+  console.log(req.method);
   const job = await myQueue.add('ocr', { filePath: req.file.path });
   res.json({ taskId: job.id });
 });
