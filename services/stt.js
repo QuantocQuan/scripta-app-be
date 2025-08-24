@@ -5,7 +5,7 @@ import fs from 'fs';
 import { SpeechClient } from '@google-cloud/speech';
 
 ffmpeg.setFfmpegPath(ffmpegPath);
-const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString('utf-8'));
+const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'base64').toString('utf-8'));
 
 const speechClient = new SpeechClient({ credentials: keyJson });
 
