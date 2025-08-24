@@ -4,8 +4,10 @@ import { speechToText } from './services/stt.js';
 import { imageToText } from './services/ocr.js';
 import { youtubeToText } from './services/youtube.js';
 
-const connection = { host: process.env.REDIS_URL, port: process.env.REDIS_PORT };
-
+const connection = { host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+  username: process.env.REDIS_USERNAME,
+  password: process.env.REDIS_PASSWORD};
 const worker = new Worker('tasks', async job => {
   console.log(`⚡ Nhận job: id=${job.id}, name=${job.name}, data=`, job.data);
 
