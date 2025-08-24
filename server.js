@@ -4,6 +4,8 @@ import { myQueue } from './queue.js';
 import 'dotenv/config';
 import setupSwagger from './swagger.js';
 import cors from 'cors';
+import fs from "fs";
+
 const app = express();
 app.use(express.json());
 app.use(cors());
