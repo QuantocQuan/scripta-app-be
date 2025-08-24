@@ -8,6 +8,7 @@ import { youtubeToText } from "./services/youtube.js";
 const connection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
+
 const worker = new Worker(
   "tasks",
   async job => {
@@ -17,8 +18,7 @@ const worker = new Worker(
     try {
       if (job.name === "stt") {
         console.log("👉 Đang xử lý STT...");
-        const buffer = fs.readFileSync(job.data.filePath);
-        result = await speechToText(buffer);
+        result = await speechToText(job.data.filePath);
       } else if (job.name === "ocr") {
         console.log("👉 Đang xử lý OCR...");
         const buffer = fs.readFileSync(job.data.filePath);

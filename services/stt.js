@@ -10,13 +10,11 @@ const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIAL
 const speechClient = new SpeechClient({ credentials: keyJson });
 
 // Chuẩn hoá audio về LINEAR16 16kHz mono để STT ổn định
-async function transcodeToWavMono16k(buffer) {
-  const tmpIn = tmp.fileSync({ postfix: '.input' });
+async function transcodeToWavMono16k(filePath) {
   const tmpOut = tmp.fileSync({ postfix: '.wav' });
-  fs.writeFileSync(tmpIn.name, buffer);
 
   await new Promise((resolve, reject) => {
-    ffmpeg(tmpIn.name)
+    ffmpeg(filePath)
       .audioFrequency(16000)
       .audioChannels(1)
       .audioCodec('pcm_s16le')
@@ -27,13 +25,12 @@ async function transcodeToWavMono16k(buffer) {
   });
 
   const wav = fs.readFileSync(tmpOut.name);
-  tmpIn.removeCallback();
   tmpOut.removeCallback();
   return wav;
 }
 
-export async function speechToText(fileBuffer, languageCode = process.env.DEFAULT_STT_LANG || 'vi-VN') {
-  const wav = await transcodeToWavMono16k(fileBuffer);
+export async function speechToText(filePath, languageCode = process.env.DEFAULT_STT_LANG || 'vi-VN') {
+  const wav = await transcodeToWavMono16k(filePath);
 
   const request = {
     config: {

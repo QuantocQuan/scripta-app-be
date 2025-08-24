@@ -10,7 +10,7 @@ const options = {
     },
     servers: [
       {
-        url: `https://scripta-app-be-production.up.railway.app/${process.env.PORT}`, // hoặc ngrok url
+        url: `https://scripta-app-be-production.up.railway.app`, // hoặc ngrok url
       },
     ],
   },
