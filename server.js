@@ -120,7 +120,9 @@ app.get('/api/status/:id', async (req, res) => {
   } catch { }
   res.json({ id: job.id, state, result });
 });
-
+app.get("/", (req, res) => {
+  res.send("✅ Server is running on Railway!");
+});
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
