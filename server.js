@@ -8,6 +8,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 setupSwagger(app);
+// đảm bảo thư mục results tồn tại
+if (!fs.existsSync("./uploads")) {
+  fs.mkdirSync("./uploads");
+}
 const upload = multer({ dest: 'uploads/' });
 
 /**
