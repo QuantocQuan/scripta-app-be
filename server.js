@@ -42,6 +42,8 @@ const upload = multer({ dest: '/tmp' });
  *                   type: string
  */
 app.post('/api/stt', upload.single('file'), async (req, res) => {
+  // Kiểm tra file tồn tại
+  if (!fs.existsSync(filePath)) return res.status(500).send('File chưa ghi xong');
 
   const job = await myQueue.add('stt', { filePath: req.file.path });
   res.json({ taskId: job.id });
