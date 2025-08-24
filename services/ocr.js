@@ -1,9 +1,8 @@
 import { ImageAnnotatorClient } from '@google-cloud/vision';
+const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString('utf-8'));
 
 const visionClient = new ImageAnnotatorClient(
-    {
-        keyFilename: "./configs/stt-ocr-app-68c4d2b7ddb5.json"
-    }
+    { credentials: keyJson }
 );
 
 export async function imageToText(buffer) {

@@ -5,10 +5,9 @@ import fs from 'fs';
 import { SpeechClient } from '@google-cloud/speech';
 
 ffmpeg.setFfmpegPath(ffmpegPath);
-const speechClient = new SpeechClient({
-    keyFilename: "./configs/stt-ocr-app-68c4d2b7ddb5.json",
+const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString('utf-8'));
 
-});
+const speechClient = new SpeechClient({ credentials: keyJson });
 
 // Chuẩn hoá audio về LINEAR16 16kHz mono để STT ổn định
 async function transcodeToWavMono16k(buffer) {
