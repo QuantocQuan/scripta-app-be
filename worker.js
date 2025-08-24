@@ -5,16 +5,13 @@ import { speechToText } from "./services/stt.js";
 import { imageToText } from "./services/ocr.js";
 import { youtubeToText } from "./services/youtube.js";
 
-// Tạo connection Redis
-const connection = new IORedis({
+const connection = {
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
   username: process.env.REDIS_USERNAME,
   password: process.env.REDIS_PASSWORD,
-  tls: process.env.REDIS_TLS === "true" ? {} : undefined,
-  maxRetriesPerRequest: null,
-});
-
+  maxRetriesPerRequest: null, // ✅ cần cho BullMQ
+};
 const worker = new Worker(
   "tasks",
   async job => {
