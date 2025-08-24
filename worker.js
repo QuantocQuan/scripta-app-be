@@ -11,7 +11,8 @@ const connection = new IORedis({
   port: process.env.REDIS_PORT,
   username: process.env.REDIS_USERNAME,
   password: process.env.REDIS_PASSWORD,
-  tls: process.env.REDIS_TLS === "true" ? {} : undefined // Railway Redis thường yêu cầu TLS
+  tls: process.env.REDIS_TLS === "true" ? {} : undefined,
+  maxRetriesPerRequest: null,
 });
 
 const worker = new Worker(
