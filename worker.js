@@ -1,49 +1,72 @@
-import { Worker } from 'bullmq';
-import fs from 'fs';
-import { speechToText } from './services/stt.js';
-import { imageToText } from './services/ocr.js';
-import { youtubeToText } from './services/youtube.js';
+import { Worker } from "bullmq";
+import IORedis from "ioredis";
+import fs from "fs";
+import { speechToText } from "./services/stt.js";
+import { imageToText } from "./services/ocr.js";
+import { youtubeToText } from "./services/youtube.js";
 
-const connection = { host: process.env.REDIS_HOST,
+// Tạo connection Redis
+const connection = new IORedis({
+  host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
   username: process.env.REDIS_USERNAME,
-  password: process.env.REDIS_PASSWORD};
-const worker = new Worker('tasks', async job => {
-  console.log(`⚡ Nhận job: id=${job.id}, name=${job.name}, data=`, job.data);
+  password: process.env.REDIS_PASSWORD,
+  tls: process.env.REDIS_TLS === "true" ? {} : undefined // Railway Redis thường yêu cầu TLS
+});
 
-  let result = null;
-  try {
-    if (job.name === 'stt') {
-      console.log('👉 Đang xử lý STT...');
-       const buffer = fs.readFileSync(job.data.filePath);
-      result = await speechToText(buffer);
-    } else if (job.name === 'ocr') {
-      console.log('👉 Đang xử lý OCR...');
-             const buffer = fs.readFileSync(job.data.filePath);
+const worker = new Worker(
+  "tasks",
+  async job => {
+    console.log(`⚡ Nhận job: id=${job.id}, name=${job.name}, data=`, job.data);
 
-      result = await imageToText(buffer);
-    } else if (job.name === 'youtube') {
-      console.log('👉 Đang xử lý YouTube...');
-      result = await youtubeToText(job.data.url);
+    let result = null;
+    try {
+      if (job.name === "stt") {
+        console.log("👉 Đang xử lý STT...");
+        const buffer = fs.readFileSync(job.data.filePath);
+        result = await speechToText(buffer);
+      } else if (job.name === "ocr") {
+        console.log("👉 Đang xử lý OCR...");
+        const buffer = fs.readFileSync(job.data.filePath);
+        result = await imageToText(buffer);
+      } else if (job.name === "youtube") {
+        console.log("👉 Đang xử lý YouTube...");
+        result = await youtubeToText(job.data.url);
+      }
+
+      // đảm bảo thư mục results tồn tại
+      if (!fs.existsSync("./results")) {
+        fs.mkdirSync("./results");
+      }
+
+      fs.writeFileSync(
+        `./results/${job.id}.json`,
+        JSON.stringify({ result }, null, 2)
+      );
+      console.log(`✅ Kết quả đã lưu vào ./results/${job.id}.json`);
+      return result;
+    } catch (err) {
+      console.error(`❌ Lỗi khi xử lý job ${job.id}:`, err);
+      throw err;
     }
-
-    fs.writeFileSync(`./results/${job.id}.json`, JSON.stringify({ result }, null, 2));
-    console.log(`✅ Kết quả đã lưu vào ./results/${job.id}.json`);
-    return result;
-  } catch (err) {
-    console.error(`❌ Lỗi khi xử lý job ${job.id}:`, err);
-    throw err;
-  }
-}, { connection });
+  },
+  { connection }
+);
 
 // Khi job hoàn thành
-worker.on('completed', job => console.log(`🎉 Job ${job.id} completed`));
+worker.on("completed", job => console.log(`🎉 Job ${job.id} completed`));
 
 // Khi job thất bại
-worker.on('failed', (job, err) => console.log(`💥 Job ${job.id} failed: ${err.message}`));
+worker.on("failed", (job, err) =>
+  console.log(`💥 Job ${job.id} failed: ${err.message}`)
+);
 
-// Thêm log khi Worker sẵn sàng và kết nối Redis thành công
-worker.on('ready', () => console.log('✅ Worker đã kết nối Redis thành công và sẵn sàng nhận job'));
+// Khi Worker sẵn sàng
+worker.on("ready", () =>
+  console.log("✅ Worker đã kết nối Redis thành công và sẵn sàng nhận job")
+);
 
-// Thêm log khi Worker mất kết nối Redis
-worker.on('error', (err) => console.error('❌ Worker gặp lỗi kết nối Redis:', err));
+// Khi Worker mất kết nối Redis
+worker.on("error", err =>
+  console.error("❌ Worker gặp lỗi kết nối Redis:", err)
+);
