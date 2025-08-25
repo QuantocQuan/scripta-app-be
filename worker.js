@@ -23,7 +23,7 @@ const worker = new Worker(
         const response = await axios({ url, method: "GET", responseType: "stream" });
         const inputStream = new PassThrough();
         response.data.pipe(inputStream);
-        result = await speechToText(job.data.filePath);
+        result = await speechToText(inputStream);
       } else if (job.name === "ocr") {
         console.log("👉 Đang xử lý OCR...");
         const buffer = fs.readFileSync(job.data.filePath);
