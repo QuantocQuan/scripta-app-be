@@ -45,7 +45,7 @@ export async function speechToText(input, languageCode = process.env.DEFAULT_STT
     },
   };
 
-  const [response] = await speechClient.recognize(request);
+  const [response] = speechClient.recognize(request);
   const transcription = response.results
     ?.map(r => r.alternatives?.[0]?.transcript || '')
     .join('\n')

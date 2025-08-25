@@ -40,13 +40,12 @@ const worker = new Worker(
       if (job.name === "stt") {
         console.log("👉 Đang xử lý STT...");
         const path = job.data.filePath
-                console.log(path);
 
         const url = trimQuotes(path)
-        console.log(url);
         const response = await axios({ url, method: "GET", responseType: "stream" });
         const inputStream = new PassThrough();
         response.data.pipe(inputStream);
+        console.log(inputStream)
         result = await speechToText(inputStream);
       } else if (job.name === "ocr") {
         console.log("👉 Đang xử lý OCR...");
