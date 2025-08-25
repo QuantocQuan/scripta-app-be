@@ -46,10 +46,31 @@ export async function speechToText(input, languageCode = process.env.DEFAULT_STT
     },
   };
 
-  const [response] = await speechClient.recognize(request);
-  const transcription = response.results
-    ?.map(r => r.alternatives?.[0]?.transcript || '')
-    .join('\n')
-    .trim();
-  return transcription || '';
+
+  try {
+    const [response] = await speechClient.recognize(request);
+
+    // Log toàn bộ response để debug
+    console.log("📄 Raw STT response:", JSON.stringify(response, null, 2));
+
+    if (!response.results || response.results.length === 0) {
+      console.warn("⚠️ Không có transcript trong response");
+      return '';
+    }
+
+    const transcription = response.results
+      .map(r =>
+        r.alternatives && r.alternatives.length > 0
+          ? r.alternatives[0].transcript
+          : ''
+      )
+      .filter(Boolean)
+      .join('\n')
+      .trim();
+
+    return transcription || '';
+  } catch (err) {
+    console.error("❌ Lỗi khi gọi Google STT:", err);
+    throw err;
+  }
 }
