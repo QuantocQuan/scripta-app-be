@@ -27,8 +27,8 @@ async function saveResult(userId, taskId,  result, error = null) {
     result,
   });
 }
-function cleanString(str) {
-  return str.replace(/[';]/g, '');
+function trimQuotes(str) {
+  return str.replace(/^'+|'+$/g, "");
 }
 const worker = new Worker(
   "tasks",
@@ -39,7 +39,11 @@ const worker = new Worker(
     try {
       if (job.name === "stt") {
         console.log("👉 Đang xử lý STT...");
-        const url = cleanString(job.data.filePath)
+        const path = job.data.filePath
+                console.log(path);
+
+        const url = trimQuotes(path)
+        console.log(url);
         const response = await axios({ url, method: "GET", responseType: "stream" });
         const inputStream = new PassThrough();
         response.data.pipe(inputStream);
