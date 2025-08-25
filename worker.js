@@ -4,6 +4,8 @@ import fs from "fs";
 import { speechToText } from "./services/stt.js";
 import { imageToText } from "./services/ocr.js";
 import { youtubeToText } from "./services/youtube.js";
+import axios from "axios";
+import { PassThrough } from "stream";
 
 const connection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
@@ -18,6 +20,9 @@ const worker = new Worker(
     try {
       if (job.name === "stt") {
         console.log("👉 Đang xử lý STT...");
+        const response = await axios({ url, method: "GET", responseType: "stream" });
+        const inputStream = new PassThrough();
+        response.data.pipe(inputStream);
         result = await speechToText(job.data.filePath);
       } else if (job.name === "ocr") {
         console.log("👉 Đang xử lý OCR...");
