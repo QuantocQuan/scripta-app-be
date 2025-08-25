@@ -39,7 +39,7 @@ export async function speechToText(input, languageCode = process.env.DEFAULT_STT
       sampleRateHertz: 16000,
       languageCode,
       enableAutomaticPunctuation: true,
-      model: 'latest_long', // hoặc 'default'
+      model: 'default', // hoặc 'default'
     },
     audio: {
       content: wav.toString('base64'),
