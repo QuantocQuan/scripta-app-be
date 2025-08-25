@@ -37,8 +37,9 @@ const worker = new Worker(
     try {
       if (job.name === "stt") {
         console.log("👉 Đang xử lý STT...");
-        const url = job.data.filePath;
+        const url = job.data.filePath
         const response = await axios({ url, method: "GET", responseType: "stream" });
+        console.log(response)
         const inputStream = new PassThrough();
         response.data.pipe(inputStream);
         result = await speechToText(inputStream);
