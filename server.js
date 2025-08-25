@@ -44,7 +44,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
  */
 app.post('/api/stt', upload.single('file'), async (req, res) => {
   const fileUrl = `${process.env.SERVER_URL}/uploads/${req.file.filename}`;
-  print(fileUrl);
+  console.log(fileUrl);
   const job = await myQueue.add('stt', { filePath: fileUrl});
   res.json({ taskId: job.id });
 });
