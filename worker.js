@@ -6,7 +6,7 @@ import { imageToText } from "./services/ocr.js";
 import { youtubeToText } from "./services/youtube.js";
 import axios from "axios";
 import { PassThrough } from "stream";
-import {admin} from 'firebase-admin'
+import admin from 'firebase-admin'
 const connection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
