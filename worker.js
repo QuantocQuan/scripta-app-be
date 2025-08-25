@@ -10,9 +10,10 @@ import { PassThrough } from "stream";
 const connection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
+const keyJson = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('utf-8'));
 
 admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
+  credential: admin.credential.cert(JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('utf-8')));
 });
 const db = admin.firestore();
 
