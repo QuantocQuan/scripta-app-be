@@ -11,6 +11,23 @@ const connection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
 
+admin.initializeApp({
+  credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
+});
+const db = admin.firestore();
+
+async function saveResult(userId, taskId,  result, error = null) {
+  const taskRef = db
+    .collection("results")
+    .doc(userId)
+    .collection("tasks")
+    .doc(taskId);
+
+  await taskRef.set({
+    result,
+  });
+}
+
 const worker = new Worker(
   "tasks",
   async job => {
@@ -33,20 +50,13 @@ const worker = new Worker(
         console.log("👉 Đang xử lý YouTube...");
         result = await youtubeToText(job.data.url);
       }
+      console.log(result);
+        await saveResult("123", job.id, job.name, job.data, result);
 
-      // đảm bảo thư mục results tồn tại
-      if (!fs.existsSync("./results")) {
-        fs.mkdirSync("./results");
-      }
-
-      fs.writeFileSync(
-        `./results/${job.id}.json`,
-        JSON.stringify({ result }, null, 2)
-      );
-      console.log(`✅ Kết quả đã lưu vào ./results/${job.id}.json`);
       return result;
     } catch (err) {
       console.error(`❌ Lỗi khi xử lý job ${job.id}:`, err);
+       await saveResult("123", job.id, job.name, job.data, result);
       throw err;
     }
   },
