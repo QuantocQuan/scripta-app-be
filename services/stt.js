@@ -26,6 +26,7 @@ async function transcodeToWavMono16k(input) {
 
   const wav = fs.readFileSync(tmpOut.name);
   tmpOut.removeCallback();
+  console.log("wav file", wav);
   return wav;
 }
 
