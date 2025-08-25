@@ -56,7 +56,7 @@ const worker = new Worker(
       return result;
     } catch (err) {
       console.error(`❌ Lỗi khi xử lý job ${job.id}:`, err);
-       await saveResult("123", job.id, job.name, job.data, result);
+       await saveResult("123", job.id, result);
       throw err;
     }
   },
