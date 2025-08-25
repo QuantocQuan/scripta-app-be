@@ -39,14 +39,13 @@ const worker = new Worker(
     try {
       if (job.name === "stt") {
         console.log("👉 Đang xử lý STT...");
-        const path = job.data.filePath
+        const url = job.data.filePath
 
-        const url = trimQuotes(path)
         const response = await axios({ url, method: "GET", responseType: "stream" });
-        const inputStream = new PassThrough();
-        response.data.pipe(inputStream);
-        console.log(inputStream)
-        result = await speechToText(inputStream);
+        // const inputStream = new PassThrough();
+        // response.data.pipe(inputStream);
+        // console.log(inputStream)
+        result = await speechToText(response.data);
       } else if (job.name === "ocr") {
         console.log("👉 Đang xử lý OCR...");
         const buffer = fs.readFileSync(job.data.filePath);
