@@ -51,7 +51,7 @@ const worker = new Worker(
         result = await youtubeToText(job.data.url);
       }
       console.log(result);
-        await saveResult("123", job.id, job.name, job.data, result);
+        await saveResult("123", job.id, result);
 
       return result;
     } catch (err) {
