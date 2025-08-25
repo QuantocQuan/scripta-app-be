@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cors());
 setupSwagger(app);
 
-const upload = multer({ dest: '/uploads' });
+const upload = multer({ dest: 'uploads/' });
 // Serve static folder để worker có thể GET file
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 /**
