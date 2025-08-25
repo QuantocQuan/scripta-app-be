@@ -4,15 +4,16 @@ import { myQueue } from './queue.js';
 import 'dotenv/config';
 import setupSwagger from './swagger.js';
 import cors from 'cors';
-import fs from "fs";
+import path from "path";
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 setupSwagger(app);
 
-const upload = multer({ dest: '/tmp' });
-
+const upload = multer({ dest: '/uploads' });
+// Serve static folder để worker có thể GET file
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 /**
  * @swagger
  * /api/stt:
@@ -42,10 +43,8 @@ const upload = multer({ dest: '/tmp' });
  *                   type: string
  */
 app.post('/api/stt', upload.single('file'), async (req, res) => {
-  // Kiểm tra file tồn tại
-  if (!fs.existsSync(filePath)) return res.status(500).send('File chưa ghi xong');
-
-  const job = await myQueue.add('stt', { filePath: req.file.path });
+  const fileUrl = `${process.env.SERVER_URL}/uploads/${req.file.filename}`;
+  const job = await myQueue.add('stt', { filePath: fileUrl});
   res.json({ taskId: job.id });
 });
 
@@ -71,7 +70,7 @@ app.post('/api/stt', upload.single('file'), async (req, res) => {
  *         description: Trả về taskId
  */
 app.post('/api/ocr', upload.single('file'), async (req, res) => {
-  console.log(req.method);
+  const fileUrl = `${process.env.SERVER_URL}/uploads/${req.file.filename}`;
   const job = await myQueue.add('ocr', { filePath: req.file.path });
   res.json({ taskId: job.id });
 });
