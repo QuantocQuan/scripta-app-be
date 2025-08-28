@@ -5,73 +5,70 @@ import fs from 'fs';
 import { SpeechClient } from '@google-cloud/speech';
 
 ffmpeg.setFfmpegPath(ffmpegPath);
-const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'base64').toString('utf-8'));
 
+const keyJson = JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'base64').toString('utf-8'));
 const speechClient = new SpeechClient({ credentials: keyJson });
 
-// Chuẩn hoá audio về LINEAR16 16kHz mono để STT ổn định
-async function transcodeToWavMono16k(inputPath) {
-  const tmpOut = tmp.fileSync({ postfix: '.wav' });
+// 1️⃣ Tách audio dài thành các chunk ≤ chunkSeconds
+async function splitAudioToChunks(inputPath, chunkSeconds = 50) {
+  const tmpDir = tmp.dirSync({ unsafeCleanup: true });
+  const outputPattern = `${tmpDir.name}/chunk_%03d.wav`;
 
   await new Promise((resolve, reject) => {
     ffmpeg(inputPath)
-      .audioFrequency(16000)
-      .audioChannels(1)
       .audioCodec('pcm_s16le')
+      .audioChannels(1)
+      .audioFrequency(16000)
       .format('wav')
-      .on('error', reject)
+      .outputOptions([
+        '-f segment',
+        `-segment_time ${chunkSeconds}`,
+        '-reset_timestamps 1'
+      ])
       .on('end', resolve)
-      .save(tmpOut.name);
+      .on('error', reject)
+      .save(outputPattern);
   });
 
-  const wav = fs.readFileSync(tmpOut.name);
-  tmpOut.removeCallback();
-  console.log("wav file", wav);
-  return wav;
+  // Lấy danh sách file chunk
+  const files = fs.readdirSync(tmpDir.name)
+    .filter(f => f.endsWith('.wav'))
+    .map(f => `${tmpDir.name}/${f}`);
+
+  return { files, tmpDir };
 }
 
-export async function speechToText(inputPath, languageCode = process.env.DEFAULT_STT_LANG || 'vi-VN') {
-  const wav = await transcodeToWavMono16k(inputPath);
-
+// 2️⃣ Gọi Google STT cho 1 chunk
+async function recognizeChunk(filePath, languageCode = 'vi-VN') {
+  const wav = fs.readFileSync(filePath);
   const request = {
     config: {
       encoding: 'LINEAR16',
       sampleRateHertz: 16000,
       languageCode,
       enableAutomaticPunctuation: true,
-      model: 'default', // hoặc 'default'
     },
-    audio: {
-       uri: gcsUri
-    },
+    audio: { content: wav.toString('base64') },
   };
 
+  const [response] = await speechClient.recognize(request);
+  return response.results
+    .map(r => r.alternatives?.[0]?.transcript || '')
+    .filter(Boolean)
+    .join('\n');
+}
 
-  try {
-    const [operation] = await speechClient.longRunningRecognize(request);
-    const [response] = await operation.promise();
+// 3️⃣ Hàm chính xử lý audio dài
+export async function speechToTextLong(inputPath, languageCode = 'vi-VN') {
+  const { files, tmpDir } = await splitAudioToChunks(inputPath, 50);
 
-    // Log toàn bộ response để debug
-    console.log("📄 Raw STT response:", JSON.stringify(response, null, 2));
-
-    if (!response.results || response.results.length === 0) {
-      console.warn("⚠️ Không có transcript trong response");
-      return '';
-    }
-
-    const transcription = response.results
-      .map(r =>
-        r.alternatives && r.alternatives.length > 0
-          ? r.alternatives[0].transcript
-          : ''
-      )
-      .filter(Boolean)
-      .join('\n')
-      .trim();
-
-    return transcription || '';
-  } catch (err) {
-    console.error("❌ Lỗi khi gọi Google STT:", err);
-    throw err;
+  let fullTranscript = '';
+  for (const f of files) {
+    console.log(`👉 Xử lý chunk: ${f}`);
+    const text = await recognizeChunk(f, languageCode);
+    fullTranscript += text + '\n';
   }
+
+  tmpDir.removeCallback(); // xóa tmp
+  return fullTranscript.trim();
 }
