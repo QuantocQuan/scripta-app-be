@@ -28,9 +28,7 @@ async function saveResult(userId, taskId, result, error = null) {
     result,
   });
 }
-function trimQuotes(str) {
-  return str.replace(/^'+|'+$/g, "");
-}
+
 const worker = new Worker(
   "tasks",
   async job => {
@@ -50,10 +48,10 @@ const worker = new Worker(
         const pathFile = await getPathFileTmp(url, ".jpg")
         result = await imageToText(pathFile);
       }
-      else if (job.name === "youtube") {
-        console.log("👉 Đang xử lý YouTube...");
-        result = await youtubeToText(job.data.url);
-      }
+      // else if (job.name === "youtube") {
+      //   console.log("👉 Đang xử lý YouTube...");
+      //   result = await youtubeToText(job.data.url);
+      // }
       console.log(result);
       await saveResult("123", job.id, result);
 

@@ -94,11 +94,11 @@ app.post('/api/ocr', upload.single('file'), async (req, res) => {
  *       200:
  *         description: Trả về taskId
  */
-app.post('/api/youtube', async (req, res) => {
-  const { url } = req.body;
-  const job = await myQueue.add('youtube', { url });
-  res.json({ taskId: job.id });
-});
+// app.post('/api/youtube', async (req, res) => {
+//   const { url } = req.body;
+//   const job = await myQueue.add('youtube', { url });
+//   res.json({ taskId: job.id });
+// });
 
 /**
  * @swagger
