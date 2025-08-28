@@ -59,7 +59,7 @@ async function recognizeChunk(filePath, languageCode = 'vi-VN') {
 }
 
 // 3️⃣ Hàm chính xử lý audio dài
-export async function speechToTextLong(inputPath, languageCode = 'vi-VN') {
+export async function speechToText(inputPath, languageCode = 'vi-VN') {
   const { files, tmpDir } = await splitAudioToChunks(inputPath, 50);
 
   let fullTranscript = '';
