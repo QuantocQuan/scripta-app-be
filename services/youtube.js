@@ -7,26 +7,23 @@ import { speechToText } from './stt.js';
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 
-export async function youtubeToText(url, languageCode = 'vi-VN') {
+
+// Hàm tải audio từ YouTube và lưu tạm
+async function downloadYoutubeAudio(url) {
+  const tmpFile = tmp.fileSync({ postfix: ".mp4" }); // file tạm
+  await new Promise((resolve, reject) => {
+    ytdl(url, { filter: "audioonly" })
+      .pipe(fs.createWriteStream(tmpFile.name))
+      .on("finish", resolve)
+      .on("error", reject);
+  });
+  return tmpFile.name; // trả về path file tạm
+}
+export async function youtubeToText(url) {
   if (!ytdl.validateURL(url)) {
     throw new Error('YouTube URL không hợp lệ');
   }
-
-  // 1) Tải audio stream (m4a)
-  const tmpOut = tmp.fileSync({ postfix: '.m4a' });
-  await new Promise((resolve, reject) => {
-    const stream = ytdl(url, { quality: 'highestaudio', filter: 'audioonly' })
-      .on('error', reject)
-      .pipe(fs.createWriteStream(tmpOut.name))
-      .on('finish', resolve)
-      .on('error', reject);
-  });
-
-  // 2) Đọc file m4a thành buffer
-  const audioBuffer = fs.readFileSync(tmpOut.name);
-  tmpOut.removeCallback();
-
-  // 3) Đưa qua STT
-  const text = await speechToText(audioBuffer, languageCode);
+  const pathFile = downloadYoutubeAudio(url);
+  const text = await speechToText(pathFile);
   return text;
 }

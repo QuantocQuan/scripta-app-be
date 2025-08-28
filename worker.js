@@ -41,18 +41,19 @@ const worker = new Worker(
       if (job.name === "stt") {
         console.log("👉 Đang xử lý STT...");
         const url = job.data.filePath
-        const pathFile = await getPathFileTmp(url)
+        const pathFile = await getPathFileTmp(url, ".wav")
         result = await speechToText(pathFile);
       }
       else if (job.name === "ocr") {
         console.log("👉 Đang xử lý OCR...");
-        const buffer = fs.readFileSync(job.data.filePath);
-        result = await imageToText(buffer);
-      } 
-      //else if (job.name === "youtube") {
-      //   console.log("👉 Đang xử lý YouTube...");
-      //   result = await youtubeToText(job.data.url);
-      // }
+        const url = job.data.filePath
+        const pathFile = await getPathFileTmp(url, ".jpg")
+        result = await imageToText(pathFile);
+      }
+      else if (job.name === "youtube") {
+        console.log("👉 Đang xử lý YouTube...");
+        result = await youtubeToText(job.data.url);
+      }
       console.log(result);
       await saveResult("123", job.id, result);
 
@@ -84,19 +85,19 @@ worker.on("error", err =>
   console.error("❌ Worker gặp lỗi kết nối Redis:", err)
 );
 
- async function getPathFileTmp(url) {
+async function getPathFileTmp(url, ext) {
   // tạo file tạm (sẽ tự xóa sau khi close nếu muốn)
-        const tmpFile = tmp.fileSync({ postfix: ".wav" });
-        const writer = fs.createWriteStream(tmpFile.name);
+  const tmpFile = tmp.fileSync({ postfix: ext });
+  const writer = fs.createWriteStream(tmpFile.name);
 
-        const response = await axios({ url, method: "GET", responseType: "stream" });
+  const response = await axios({ url, method: "GET", responseType: "stream" });
 
-        response.data.pipe(writer);
+  response.data.pipe(writer);
 
-        // đợi ghi xong
-        await new Promise((resolve, reject) => {
-          writer.on("finish", resolve);
-          writer.on("error", reject);
-        });
-        return tmpFile.name;
-      }
+  // đợi ghi xong
+  await new Promise((resolve, reject) => {
+    writer.on("finish", resolve);
+    writer.on("error", reject);
+  });
+  return tmpFile.name;
+}
