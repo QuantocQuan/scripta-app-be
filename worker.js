@@ -41,26 +41,15 @@ const worker = new Worker(
       if (job.name === "stt") {
         console.log("👉 Đang xử lý STT...");
         const url = job.data.filePath
-        // tạo file tạm (sẽ tự xóa sau khi close nếu muốn)
-        const tmpFile = tmp.fileSync({ postfix: ".wav" });
-        const writer = fs.createWriteStream(tmpFile.name);
-
-        const response = await axios({ url, method: "GET", responseType: "stream" });
-
-        response.data.pipe(writer);
-
-        // đợi ghi xong
-        await new Promise((resolve, reject) => {
-          writer.on("finish", resolve);
-          writer.on("error", reject);
-        });
-        result = await speechToText(tmpFile.name);
+        const pathFile = await getPathFileTmp(url)
+        result = await speechToText(pathFile);
       }
-      // else if (job.name === "ocr") {
-      //   console.log("👉 Đang xử lý OCR...");
-      //   const buffer = fs.readFileSync(job.data.filePath);
-      //   result = await imageToText(buffer);
-      // } else if (job.name === "youtube") {
+      else if (job.name === "ocr") {
+        console.log("👉 Đang xử lý OCR...");
+        const buffer = fs.readFileSync(job.data.filePath);
+        result = await imageToText(buffer);
+      } 
+      //else if (job.name === "youtube") {
       //   console.log("👉 Đang xử lý YouTube...");
       //   result = await youtubeToText(job.data.url);
       // }
@@ -94,3 +83,20 @@ worker.on("ready", () =>
 worker.on("error", err =>
   console.error("❌ Worker gặp lỗi kết nối Redis:", err)
 );
+
+ async function getPathFileTmp(url) {
+  // tạo file tạm (sẽ tự xóa sau khi close nếu muốn)
+        const tmpFile = tmp.fileSync({ postfix: ".wav" });
+        const writer = fs.createWriteStream(tmpFile.name);
+
+        const response = await axios({ url, method: "GET", responseType: "stream" });
+
+        response.data.pipe(writer);
+
+        // đợi ghi xong
+        await new Promise((resolve, reject) => {
+          writer.on("finish", resolve);
+          writer.on("error", reject);
+        });
+        return tmpFile.name;
+      }
