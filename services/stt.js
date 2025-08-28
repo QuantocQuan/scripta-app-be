@@ -42,7 +42,7 @@ export async function speechToText(inputPath, languageCode = process.env.DEFAULT
       model: 'default', // hoặc 'default'
     },
     audio: {
-      content: wav.toString('base64'),
+       uri: gcsUri
     },
   };
 
