@@ -48,7 +48,8 @@ export async function speechToText(inputPath, languageCode = process.env.DEFAULT
 
 
   try {
-    const [response] = await speechClient.recognize(request);
+    const [operation] = await speechClient.longRunningRecognize(request);
+    const [response] = await operation.promise();
 
     // Log toàn bộ response để debug
     console.log("📄 Raw STT response:", JSON.stringify(response, null, 2));
