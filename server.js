@@ -72,7 +72,7 @@ app.post('/api/stt', upload.single('file'), async (req, res) => {
  */
 app.post('/api/ocr', upload.single('file'), async (req, res) => {
   const fileUrl = `${process.env.SERVER_URL}/uploads/${req.file.filename}`;
-  const job = await myQueue.add('ocr', { filePath: req.file.path });
+  const job = await myQueue.add('ocr', {filePath: fileUrl});
   res.json({ taskId: job.id });
 });
 
